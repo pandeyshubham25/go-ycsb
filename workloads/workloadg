@@ -22,13 +22,12 @@
 #   Request distribution: zipfian
 
 recordcount=100000
-operationcount=10000
+operationcount=100000
 workload=core
+fieldlength=1024
 
 readallfields=true
 dotransactions=false
-verbose=true
-fieldlength=100
 
 readproportion=0.0
 updateproportion=1

@@ -239,7 +239,6 @@ func (c *core) buildValues(state *coreState, key string) map[string][]byte {
 		if c.dataIntegrity {
 			buf = c.buildDeterministicValue(state, key, fieldKey)
 		} else {
-
 			buf = c.buildRandomValue(state)
 		}
 
