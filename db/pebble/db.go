@@ -16,7 +16,7 @@ import (
 
 // properties
 const (
-	pebblePath                        = "pebble.path"
+	pebblePath                        = "pebble.dir"
 	pebbleCacheSize                   = "pebble.cache_size"
 	pebbleConcurrency                 = "pebble.concurrency"
 	pebbleDisableWAL                  = "pebble.disable_WAL"
@@ -69,6 +69,9 @@ func (c pebbleCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 	//Akon nopts := &pebble.Options{FS: vfs.Default}
 	//Akon db, err := pebble.Open(path, nopts)
 	db, err := pebble.Open(opts.Path, opts.DBOptions)
+
+	opts.DBOptions.Cache.Unref()
+
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +87,9 @@ func getOptions(p *properties.Properties) pebbleOptions {
 	path := p.GetString(pebblePath, "/tmp/pebble")
 
 	cacheSize := p.GetInt64(pebbleCacheSize, 1<<30)
+	//cacheSize := int64(1 << 30)
 	cache := pebble.NewCache(cacheSize)
-	defer cache.Unref()
+	//defer cache.Unref()
 
 	opts := &pebble.Options{
 		Cache:                       cache,
