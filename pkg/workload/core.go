@@ -226,8 +226,11 @@ func (c *core) buildSingleValue(state *coreState, key string) map[string][]byte 
 
 	}
 
-	values[fieldKey] = buf
-
+	if c.incrementalUpdate {
+		values[""] = buf
+	} else {
+		values[fieldKey] = buf
+	}
 	return values
 }
 
