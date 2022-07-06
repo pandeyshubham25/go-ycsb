@@ -206,7 +206,10 @@ func (db *badgerDB) Scan(ctx context.Context, table string, startKey string, cou
 }
 
 func (db *badgerDB) Update(ctx context.Context, table string, key string, values map[string][]byte) error {
+	//fmt.Println("Gonna run GC")
+	//db.db.RunValueLogGC(0.01)
 	err := db.db.Update(func(txn *badger.Txn) error {
+
 		rowKey := db.getRowKey(table, key)
 
 		item, err := txn.Get(rowKey)
@@ -237,18 +240,19 @@ func (db *badgerDB) Update(ctx context.Context, table string, key string, values
 		}()
 
 		buf, err = db.r.Encode(buf, data)
+		/*
+			if db.updates%1000 == 0 {
+				//fmt.Println("Size is : ", len(buf))
 
-		if db.updates%1000 == 0 {
-			//fmt.Println("Size is : ", len(buf))
-			/*
-				fmt.Println("Calling GC ", db.updates)
-				err := db.db.RunValueLogGC(0.99)
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					fmt.Println("**************************************************************************************")
-				}*/
-		}
+					fmt.Println("Calling GC ", db.updates)
+					err := db.db.RunValueLogGC(0.99)
+					if err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Println("**************************************************************************************")
+					}
+			}
+		*/
 		if err != nil {
 			return err
 		}
