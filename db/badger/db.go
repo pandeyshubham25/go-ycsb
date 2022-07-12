@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/magiconair/properties"
@@ -57,9 +58,10 @@ type badgerDB struct {
 
 	db *badger.DB
 
-	r       *util.RowCodec
-	bufPool *util.BufPool
-	updates int
+	r        *util.RowCodec
+	bufPool  *util.BufPool
+	updates  int
+	splitVal bool
 }
 
 type contextKey string
@@ -81,7 +83,6 @@ func (c badgerCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &badgerDB{
 		p:       p,
 		db:      db,
@@ -206,6 +207,10 @@ func (db *badgerDB) Scan(ctx context.Context, table string, startKey string, cou
 }
 
 func (db *badgerDB) Update(ctx context.Context, table string, key string, values map[string][]byte) error {
+
+	if val, ok := values["single"]; ok {
+		return UpdateVal(db, ctx, table, key, val)
+	}
 	//fmt.Println("Gonna run GC")
 	//db.db.RunValueLogGC(0.01)
 	err := db.db.Update(func(txn *badger.Txn) error {
@@ -257,6 +262,86 @@ func (db *badgerDB) Update(ctx context.Context, table string, key string, values
 			return err
 		}
 		return txn.Set(rowKey, buf)
+	})
+	return err
+}
+
+func UpdateVal(db *badgerDB, ctx context.Context, table string, key string, value []byte) error {
+	err := db.db.Update(func(txn *badger.Txn) error {
+		rowKey := []byte(key)
+
+		item, err := txn.Get(rowKey)
+
+		//CASE 1: Inserting the value for the first time
+		if err != nil {
+			//fmt.Println("Inserting for first time!")
+			parValueStr := "|1"
+
+			//set the new parent Val
+			txn.Set([]byte(key), []byte(parValueStr))
+
+			//initialize child Key
+			childKey := "1"
+
+			//set child key value
+			return txn.Set([]byte(childKey), value)
+		}
+		var dst []byte
+
+		parValue, err := item.ValueCopy(dst)
+		if err != nil {
+			return err
+		}
+
+		//convert the keys list to string
+		parValueStr := string(parValue)
+
+		//find the last key
+		lastKey := ""
+		for i := len(parValueStr) - 1; i >= 0 && parValueStr[i] != '|'; i-- {
+			lastKey = string(parValueStr[i]) + lastKey
+		}
+
+		//fmt.Println("********", string(parValue))
+		curCount, _ := strconv.Atoi(lastKey)
+
+		//get the value of last key
+		item, err = txn.Get([]byte(lastKey))
+		if err != nil {
+
+			return err
+		}
+
+		childValue, err := item.ValueCopy(dst)
+		if err != nil {
+			return err
+		}
+
+		// if there is overflow on current child key val
+		if int64(len(childValue)+8) > db.db.Opts().ValueThreshold {
+			//fmt.Println("Overflow")
+			//create new child key
+			newChildKey := fmt.Sprintf("%d", curCount+1)
+
+			//fmt.Println("New Key ", newChildKey)
+
+			//append new child to parVal
+			parValueStr = parValueStr + "|" + newChildKey
+
+			//update parent val
+			txn.Set([]byte(key), []byte(parValueStr))
+
+			//set the current value for new child
+			return txn.Set([]byte(newChildKey), value)
+
+		} else {
+			//append new value to existing child's value
+			//fmt.Println("Current append ", lastKey)
+			childValue = append(childValue, value...)
+			//fmt.Println(len(childValue))
+			//set the child value to the new value
+			return txn.Set([]byte(lastKey), childValue)
+		}
 	})
 	return err
 }

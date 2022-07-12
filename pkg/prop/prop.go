@@ -68,6 +68,8 @@ const (
 	ReadModifyWriteProportionDefault = float64(0.0)
 	IncrementalUpdate                = "incrementalupdate"
 	IncrementalUpdateDefault         = bool(false)
+	SplitVals                        = "splitvals"
+	SplitValsDefault                 = bool(false)
 	// "uniform", "zipfian", "latest"
 	RequestDistribution        = "requestdistribution"
 	RequestDistributionDefault = "uniform"

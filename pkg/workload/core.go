@@ -69,6 +69,7 @@ type core struct {
 	writeAllFields       bool
 	dataIntegrity        bool
 	incrementalUpdate    bool
+	splitVals            bool
 
 	keySequence                  ycsb.Generator
 	operationChooser             *generator.Discrete
@@ -219,7 +220,9 @@ func (c *core) buildSingleValue(state *coreState, key string) map[string][]byte 
 	} else {
 		if c.incrementalUpdate {
 			buf = c.buildValueWithSize(state, state.valSize)
-			state.valSize += 8
+			if !c.splitVals {
+				state.valSize += 8
+			}
 		} else {
 			buf = c.buildRandomValue(state)
 		}
@@ -227,7 +230,11 @@ func (c *core) buildSingleValue(state *coreState, key string) map[string][]byte 
 	}
 
 	if c.incrementalUpdate {
-		values[""] = buf
+		if c.splitVals {
+			values["single"] = buf
+		} else {
+			values[""] = buf
+		}
 	} else {
 		values[fieldKey] = buf
 	}
@@ -421,7 +428,7 @@ func (c *core) DoTransaction(ctx context.Context, db ycsb.DB) error {
 		return c.doTransactionRead(ctx, db, state)
 	case update:
 		//if incrementalUpdate is enabled, we first INSERT the seed key and then perform incremental updates on it
-		if c.incrementalUpdate && !state.valInserted {
+		if !c.splitVals && c.incrementalUpdate && !state.valInserted {
 			db.Insert(ctx, c.table, "fixedKey", c.buildValues(state, "fixedKey"))
 			state.valInserted = true
 		}
@@ -703,6 +710,7 @@ func (coreCreator) Create(p *properties.Properties) (ycsb.Workload, error) {
 	c.writeAllFields = p.GetBool(prop.WriteAllFields, prop.WriteAllFieldsDefault)
 	c.dataIntegrity = p.GetBool(prop.DataIntegrity, prop.DataIntegrityDefault)
 	c.incrementalUpdate = p.GetBool(prop.IncrementalUpdate, prop.IncrementalUpdateDefault)
+	c.splitVals = p.GetBool(prop.SplitVals, prop.SplitValsDefault)
 
 	fieldLengthDistribution := p.GetString(prop.FieldLengthDistribution, prop.FieldLengthDistributionDefault)
 	if c.dataIntegrity && fieldLengthDistribution != "constant" {
