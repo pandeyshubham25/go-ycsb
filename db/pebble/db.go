@@ -13,7 +13,7 @@ import (
 	"github.com/pingcap/go-ycsb/pkg/util"
 	"github.com/pingcap/go-ycsb/pkg/ycsb"
 )
- 
+
 // properties
 const (
 	pebblePath                        = "pebble.dir"
@@ -70,7 +70,7 @@ func (c pebbleCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 	//Akon db, err := pebble.Open(path, nopts)
 	db, err := pebble.Open(opts.Path, opts.DBOptions)
 
-	opts.DBOptions.Cache.Unref()
+	defer opts.DBOptions.Cache.Unref()
 
 	if err != nil {
 		return nil, err

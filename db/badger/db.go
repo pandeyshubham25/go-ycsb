@@ -156,8 +156,10 @@ func (db *badgerDB) Read(ctx context.Context, table string, key string, fields [
 	var m map[string][]byte
 	err := db.db.View(func(txn *badger.Txn) error {
 		rowKey := db.getRowKey(table, key)
+
 		item, err := txn.Get(rowKey)
 		if err != nil {
+			fmt.Println("Missing Key !!!!!!!!!!!!!!!! - ", rowKey)
 			return err
 		}
 
