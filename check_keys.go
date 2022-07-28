@@ -24,7 +24,7 @@ func main() {
 	defer itr.Close()
 
 	// Collect keys from flattened directory
-	var StringSet map[string]int
+	StringSet := make(map[string]int)
 	keyPrefix := []byte("")
 	for itr.Seek(keyPrefix); itr.ValidForPrefix(keyPrefix); itr.Next() {
 		item := itr.Item()
