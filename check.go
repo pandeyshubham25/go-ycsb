@@ -6,7 +6,7 @@ import (
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-func main() {
+func main1() {
 	// Open the Badger database located in the /tmp/badger directory.
 	// It will be created if it doesn't exist.
 	opts := badger.DefaultOptions("/customer_data/badger2/")
