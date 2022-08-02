@@ -19,8 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dgraph-io/badger"
-	"github.com/dgraph-io/badger/options"
+	"github.com/dgraph-io/badger/v3"
 	"github.com/magiconair/properties"
 	"github.com/pingcap/go-ycsb/pkg/prop"
 	"github.com/pingcap/go-ycsb/pkg/util"
@@ -60,6 +59,7 @@ type badgerDB struct {
 
 	r       *util.RowCodec
 	bufPool *util.BufPool
+	updates int
 }
 
 type contextKey string
@@ -87,29 +87,31 @@ func (c badgerCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 		db:      db,
 		r:       util.NewRowCodec(p),
 		bufPool: util.NewBufPool(),
+		updates: 0,
 	}, nil
 }
 
 func getOptions(p *properties.Properties) badger.Options {
-	opts := badger.DefaultOptions
-	opts.Dir = p.GetString(badgerDir, "/tmp/badger")
-	opts.ValueDir = p.GetString(badgerValueDir, opts.Dir)
 
+	path := p.GetString(badgerDir, "/tmp/badger")
+	opts := badger.DefaultOptions(path)
+
+	opts.ValueDir = p.GetString(badgerValueDir, path)
 	opts.SyncWrites = p.GetBool(badgerSyncWrites, false)
 	opts.NumVersionsToKeep = p.GetInt(badgerNumVersionsToKeep, 1)
-	opts.MaxTableSize = p.GetInt64(badgerMaxTableSize, 64<<20)
+	opts.MemTableSize = p.GetInt64(badgerMaxTableSize, 64<<20)
 	opts.LevelSizeMultiplier = p.GetInt(badgerLevelSizeMultiplier, 10)
 	opts.MaxLevels = p.GetInt(badgerMaxLevels, 7)
-	opts.ValueThreshold = p.GetInt(badgerValueThreshold, 32)
+	opts.ValueThreshold = p.GetInt64(badgerValueThreshold, 1<<20)
 	opts.NumMemtables = p.GetInt(badgerNumMemtables, 5)
 	opts.NumLevelZeroTables = p.GetInt(badgerNumLevelZeroTables, 5)
 	opts.NumLevelZeroTablesStall = p.GetInt(badgerNumLevelZeroTablesStall, 10)
-	opts.LevelOneSize = p.GetInt64(badgerLevelOneSize, 256<<20)
+	//opts.LevelOneSize = p.GetInt64(badgerLevelOneSize, 256<<20)
 	opts.ValueLogFileSize = p.GetInt64(badgerValueLogFileSize, 1<<30)
 	opts.ValueLogMaxEntries = uint32(p.GetUint64(badgerValueLogMaxEntries, 1000000))
 	opts.NumCompactors = p.GetInt(badgerNumCompactors, 3)
-	opts.DoNotCompact = p.GetBool(badgerDoNotCompact, false)
-	if b := p.GetString(badgerTableLoadingMode, "LoadToRAM"); len(b) > 0 {
+	//opts.DoNotCompact = p.GetBool(badgerDoNotCompact, false)
+	/*if b := p.GetString(badgerTableLoadingMode, "LoadToRAM"); len(b) > 0 {
 		if b == "FileIO" {
 			opts.TableLoadingMode = options.FileIO
 		} else if b == "LoadToRAM" {
@@ -126,7 +128,7 @@ func getOptions(p *properties.Properties) badger.Options {
 		} else if b == "MemoryMap" {
 			opts.ValueLogLoadingMode = options.MemoryMap
 		}
-	}
+	}*/
 
 	return opts
 }
@@ -154,11 +156,16 @@ func (db *badgerDB) Read(ctx context.Context, table string, key string, fields [
 	var m map[string][]byte
 	err := db.db.View(func(txn *badger.Txn) error {
 		rowKey := db.getRowKey(table, key)
+
 		item, err := txn.Get(rowKey)
 		if err != nil {
+			fmt.Println("Missing Key !!!!!!!!!!!!!!!! - ", rowKey)
 			return err
 		}
-		row, err := item.Value()
+
+		//TODO(Josh) check this logic
+		var dst []byte
+		row, err := item.ValueCopy(dst)
 		if err != nil {
 			return err
 		}
@@ -201,14 +208,21 @@ func (db *badgerDB) Scan(ctx context.Context, table string, startKey string, cou
 }
 
 func (db *badgerDB) Update(ctx context.Context, table string, key string, values map[string][]byte) error {
+	//fmt.Println("Gonna run GC")
+	//db.db.RunValueLogGC(0.01)
 	err := db.db.Update(func(txn *badger.Txn) error {
+
 		rowKey := db.getRowKey(table, key)
+
 		item, err := txn.Get(rowKey)
 		if err != nil {
 			return err
 		}
 
-		value, err := item.Value()
+		db.updates++
+
+		var dst []byte
+		value, err := item.ValueCopy(dst)
 		if err != nil {
 			return err
 		}
@@ -228,6 +242,19 @@ func (db *badgerDB) Update(ctx context.Context, table string, key string, values
 		}()
 
 		buf, err = db.r.Encode(buf, data)
+		/*
+			if db.updates%1000 == 0 {
+				//fmt.Println("Size is : ", len(buf))
+
+					fmt.Println("Calling GC ", db.updates)
+					err := db.db.RunValueLogGC(0.99)
+					if err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Println("**************************************************************************************")
+					}
+			}
+		*/
 		if err != nil {
 			return err
 		}
