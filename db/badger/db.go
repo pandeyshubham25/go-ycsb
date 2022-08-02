@@ -150,6 +150,8 @@ func (db *badgerDB) CleanupThread(_ context.Context) {
 
 func (db *badgerDB) getRowKey(table string, key string) []byte {
 	return util.Slice(fmt.Sprintf("%s:%s", table, key))
+	/*prefix := string(rand.Intn(256))
+	return util.Slice(fmt.Sprintf("%s%s", prefix, key))*/
 }
 
 func (db *badgerDB) Read(ctx context.Context, table string, key string, fields []string) (map[string][]byte, error) {
@@ -159,7 +161,6 @@ func (db *badgerDB) Read(ctx context.Context, table string, key string, fields [
 
 		item, err := txn.Get(rowKey)
 		if err != nil {
-			fmt.Println("Missing Key !!!!!!!!!!!!!!!! - ", rowKey)
 			return err
 		}
 
