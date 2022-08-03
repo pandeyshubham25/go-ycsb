@@ -84,7 +84,7 @@ func (c pebbleCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 }
 
 func getOptions(p *properties.Properties) pebbleOptions {
-	path := p.GetString(pebblePath, "/tmp/pebble")
+	path := p.GetString(pebblePath, "/customer_data/pebble")
 
 	cacheSize := p.GetInt64(pebbleCacheSize, 1<<30)
 	//cacheSize := int64(1 << 30)

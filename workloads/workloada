@@ -22,7 +22,7 @@
 #   Default data size: 1 KB records (10 fields, 100 bytes each, plus key)
 #   Request distribution: zipfian
 
-recordcount=100000
+recordcount=1000000
 operationcount=100000
 workload=core
 fieldlength=1024
@@ -34,5 +34,5 @@ updateproportion=0.5
 scanproportion=0
 insertproportion=0
 
-requestdistribution=uniform
-fieldlengthdistribution=uniform
+requestdistribution=zipfian
+fieldlengthdistribution=zipfian

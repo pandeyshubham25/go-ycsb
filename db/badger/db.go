@@ -93,7 +93,7 @@ func (c badgerCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 
 func getOptions(p *properties.Properties) badger.Options {
 
-	path := p.GetString(badgerDir, "/tmp/badger")
+	path := p.GetString(badgerDir, "/customer_data/badger")
 	opts := badger.DefaultOptions(path)
 
 	opts.ValueDir = p.GetString(badgerValueDir, path)

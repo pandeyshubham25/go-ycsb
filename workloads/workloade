@@ -43,6 +43,6 @@ fieldlengthdistribution=zipfian
 
 maxscanlength=1
 
-scanlengthdistribution=uniform
+scanlengthdistribution=zipfian
 
 
