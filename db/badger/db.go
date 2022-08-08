@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dgraph-io/badger/v3"
 	"github.com/magiconair/properties"
+	"github.com/outcaste-io/badger/v3"
 	"github.com/pingcap/go-ycsb/pkg/prop"
 	"github.com/pingcap/go-ycsb/pkg/util"
 	"github.com/pingcap/go-ycsb/pkg/ycsb"
