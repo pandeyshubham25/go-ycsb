@@ -28,14 +28,14 @@ import (
 
 //  properties
 const (
-	badgerDir                     = "badger.dir"
-	badgerValueDir                = "badger.valuedir"
-	badgerSyncWrites              = "badger.sync_writes"
-	badgerNumVersionsToKeep       = "badger.num_versions_to_keep"
-	badgerMaxTableSize            = "badger.max_table_size"
-	badgerLevelSizeMultiplier     = "badger.level_size_multiplier"
-	badgerMaxLevels               = "badger.max_levels"
-	badgerValueThreshold          = "badger.value_threshold"
+	badgerDir                 = "badger.dir"
+	badgerValueDir            = "badger.valuedir"
+	badgerSyncWrites          = "badger.sync_writes"
+	badgerNumVersionsToKeep   = "badger.num_versions_to_keep"
+	badgerMaxTableSize        = "badger.max_table_size"
+	badgerLevelSizeMultiplier = "badger.level_size_multiplier"
+	badgerMaxLevels           = "badger.max_levels"
+	//badgerValueThreshold          = "badger.value_threshold"
 	badgerNumMemtables            = "badger.num_memtables"
 	badgerNumLevelZeroTables      = "badger.num_level0_tables"
 	badgerNumLevelZeroTablesStall = "badger.num_level0_tables_stall"
@@ -102,7 +102,7 @@ func getOptions(p *properties.Properties) badger.Options {
 	opts.MemTableSize = p.GetInt64(badgerMaxTableSize, 64<<20)
 	opts.LevelSizeMultiplier = p.GetInt(badgerLevelSizeMultiplier, 10)
 	opts.MaxLevels = p.GetInt(badgerMaxLevels, 7)
-	opts.ValueThreshold = p.GetInt64(badgerValueThreshold, 1<<20)
+	//opts.ValueThreshold = p.GetInt64(badgerValueThreshold, 1<<20)
 	opts.NumMemtables = p.GetInt(badgerNumMemtables, 5)
 	opts.NumLevelZeroTables = p.GetInt(badgerNumLevelZeroTables, 5)
 	opts.NumLevelZeroTablesStall = p.GetInt(badgerNumLevelZeroTablesStall, 10)
