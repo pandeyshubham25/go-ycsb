@@ -118,7 +118,7 @@ func (w *worker) run(ctx context.Context) {
 
 	for w.opCount == 0 || w.opsDone < w.opCount {
 		//Joshua
-		if w.opsDone%50000 == 0 {
+		if w.opsDone%5000 == 0 {
 			//fmt.Println(w.opsDone)
 			t := time.Now()
 			elapsed := t.Sub(startTime).Seconds()
