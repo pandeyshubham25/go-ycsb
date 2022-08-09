@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -116,6 +117,24 @@ func (w *worker) run(ctx context.Context) {
 	startTime := time.Now()
 
 	for w.opCount == 0 || w.opsDone < w.opCount {
+		//Joshua
+		if w.opsDone%50000 == 0 {
+			//fmt.Println(w.opsDone)
+			t := time.Now()
+			elapsed := t.Sub(startTime).Seconds()
+			fmt.Printf("OPS: %d    OPS/SEC: %f\n", w.opsDone, float64(w.opsDone)/elapsed)
+
+			out, err := exec.Command("du", "/benchmarking/joshua/badger").Output()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Print("Disk Usage: ")
+			fmt.Println(string(out))
+
+			//Joshua ^^^^^^^
+		}
+		//Joshua
+
 		var err error
 		opsCount := 1
 		if w.doTransactions {
