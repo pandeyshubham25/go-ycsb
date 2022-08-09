@@ -102,7 +102,7 @@ func getOptions(p *properties.Properties) badger.Options {
 	opts.MemTableSize = p.GetInt64(badgerMaxTableSize, 64<<20)
 	opts.LevelSizeMultiplier = p.GetInt(badgerLevelSizeMultiplier, 10)
 	opts.MaxLevels = p.GetInt(badgerMaxLevels, 7)
-	opts.ValueThreshold = p.GetInt64(badgerValueThreshold, 1<<20)
+	opts.ValueThreshold = p.GetInt64(badgerValueThreshold, 1<<10)
 	opts.NumMemtables = p.GetInt(badgerNumMemtables, 5)
 	opts.NumLevelZeroTables = p.GetInt(badgerNumLevelZeroTables, 5)
 	opts.NumLevelZeroTablesStall = p.GetInt(badgerNumLevelZeroTablesStall, 10)
