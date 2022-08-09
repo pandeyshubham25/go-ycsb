@@ -122,14 +122,14 @@ func (w *worker) run(ctx context.Context) {
 			//fmt.Println(w.opsDone)
 			t := time.Now()
 			elapsed := t.Sub(startTime).Seconds()
-			fmt.Printf("OPS: %d    OPS/SEC: %f\n", w.opsDone, float64(w.opsDone)/elapsed)
+			fmt.Printf("OPS: %d    OPS/SEC: %f\t", w.opsDone, float64(w.opsDone)/elapsed)
 
-			out, err := exec.Command("du", "/benchmarking/joshua/badger").Output()
+			out, err := exec.Command("du", "-h", "/benchmarking/joshua/badger").Output()
 			if err != nil {
 				fmt.Println(err)
 			}
 			fmt.Print("Disk Usage: ")
-			fmt.Println(string(out))
+			fmt.Print(string(out))
 
 			//Joshua ^^^^^^^
 		}
