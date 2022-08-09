@@ -128,8 +128,14 @@ func (w *worker) run(ctx context.Context) {
 			if err != nil {
 				fmt.Println(err)
 			}
-			fmt.Print("Disk Usage: ")
+			out2, err := exec.Command("du", "/benchmarking/joshua/badger").Output()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Print("Disk Usage (Human): ")
 			fmt.Print(string(out))
+			fmt.Print("    Disk Usage (Bytes): ")
+			fmt.Print(string(out2))
 
 			//Joshua ^^^^^^^
 		}
