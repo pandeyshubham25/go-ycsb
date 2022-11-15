@@ -9,7 +9,7 @@ import (
 func main1() {
 	// Open the Badger database located in the /tmp/badger directory.
 	// It will be created if it doesn't exist.
-	opts := badger.DefaultOptions("/customer_data/badger2/")
+	opts := badger.DefaultOptions("/home/shubham/bench-data/badger")
 	opts = opts.WithValueThreshold(5000000)
 	db, err := badger.Open(opts)
 	if err != nil {

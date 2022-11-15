@@ -44,7 +44,6 @@ type coreState struct {
 	//used for incremental updates option
 	valSize      int            // starting size of value
 	valIncrement int            // increments in bytes for the value
-	valInserted  bool           // to check if the first seed value has been inserted
 	keyIdx       int            //which key to modify
 	keyCount     int            //number of keys to impact
 	keySet       map[string]int //set of keys inserted so far
@@ -188,11 +187,11 @@ func (c *core) InitThread(ctx context.Context, threadId int, threadCount int) co
 		//currently hardcoding this, need to find a way to do this from params
 		r:            r,
 		fieldNames:   fieldNames,
-		valSize:      8,
-		valIncrement: 8,
+		valSize:      1000000,
+		valIncrement: 0,
 		keyIdx:       0,
-		keyCount:     5,
-		valInserted:  false,
+		keyCount:     100,
+		keySet:       make(map[string]int),
 	}
 	return context.WithValue(ctx, stateKey, state)
 }
