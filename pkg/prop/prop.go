@@ -66,8 +66,17 @@ const (
 	ScanProportionDefault            = float64(0.0)
 	ReadModifyWriteProportion        = "readmodifywriteproportion"
 	ReadModifyWriteProportionDefault = float64(0.0)
-	IncrementalUpdate                = "incrementalupdate"
-	IncrementalUpdateDefault         = bool(false)
+
+	//incremental update related configuration
+	IncrementalUpdate        = "incrementalupdate"
+	IncrementalUpdateDefault = bool(false)
+	StartValLength           = "startvallength"
+	StartValLengthDefault    = int64(8)
+	ValIncrement             = "valincrement"
+	ValIncrementDefault      = int64(8)
+	HotKeysCount             = "hotkeyscount"
+	HotKeysCountDefault      = int64(1)
+
 	// "uniform", "zipfian", "latest"
 	RequestDistribution        = "requestdistribution"
 	RequestDistributionDefault = "uniform"

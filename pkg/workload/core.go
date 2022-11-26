@@ -84,6 +84,9 @@ type core struct {
 	zeroPadding                  int64
 	insertionRetryLimit          int64
 	insertionRetryInterval       int64
+	startValLength               int64
+	valIncrement                 int64
+	hotKeysCount                 int64
 
 	valuePool sync.Pool
 }
@@ -179,18 +182,18 @@ func (c *core) Load(ctx context.Context, db ycsb.DB, totalCount int64) error {
 
 // InitThread implements the Workload InitThread interface.
 func (c *core) InitThread(ctx context.Context, threadId int, threadCount int) context.Context {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	//r := rand.New(rand.NewSource(int64(threadId*threadCount) * 1000000007))
+	//r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r := rand.New(rand.NewSource(int64(threadId*threadCount) * 1000000007))
 	fieldNames := make([]string, len(c.fieldNames))
 	copy(fieldNames, c.fieldNames)
 	state := &coreState{
 		//currently hardcoding this, need to find a way to do this from params
 		r:            r,
 		fieldNames:   fieldNames,
-		valSize:      1000000,
-		valIncrement: 0,
+		valSize:      c.startValLength,
+		valIncrement: c.valIncrement,
 		keyIdx:       0,
-		keyCount:     100,
+		keyCount:     c.hotKeysCount,
 		keySet:       make(map[string]int),
 	}
 	return context.WithValue(ctx, stateKey, state)
@@ -710,7 +713,12 @@ func (coreCreator) Create(p *properties.Properties) (ycsb.Workload, error) {
 	c.readAllFields = p.GetBool(prop.ReadAllFields, prop.ReadALlFieldsDefault)
 	c.writeAllFields = p.GetBool(prop.WriteAllFields, prop.WriteAllFieldsDefault)
 	c.dataIntegrity = p.GetBool(prop.DataIntegrity, prop.DataIntegrityDefault)
+
+	//settings related to incremental update
 	c.incrementalUpdate = p.GetBool(prop.IncrementalUpdate, prop.IncrementalUpdateDefault)
+	c.startValLength = p.GetInt64(prop.startValLength, prop.startValLengthDefault)
+	c.valIncrement = p.GetInt64(prop.valIncrement, prop.valIncrementDefault)
+	c.hotKeysCount = p.GetInt64(prop.hotKeysCount, prop.hotKeysCountDefault)
 
 	fieldLengthDistribution := p.GetString(prop.FieldLengthDistribution, prop.FieldLengthDistributionDefault)
 	if c.dataIntegrity && fieldLengthDistribution != "constant" {
