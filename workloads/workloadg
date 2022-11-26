@@ -35,6 +35,7 @@ scanproportion=0
 insertproportion=0
 readmodifywriteproportion=0.0
 incrementalupdate=true
+hotkeyscount = 10
 
 requestdistribution=zipfian
 fieldlengthdistribution=zipfian

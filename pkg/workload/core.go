@@ -230,8 +230,8 @@ func (c *core) buildSingleValue(state *coreState, key string) map[string][]byte 
 		buf = c.buildDeterministicValue(state, key, fieldKey)
 	} else {
 		if c.incrementalUpdate {
-			buf = c.buildValueWithSize(state, state.valSize)
-			state.valSize += state.valIncrement
+			state.keySet[key] = state.keySet[key] + state.valIncrement
+			buf = c.buildValueWithSize(state, state.keySet[key])
 		} else {
 			buf = c.buildRandomValue(state)
 		}
@@ -588,7 +588,7 @@ func (c *core) doTransactionUpdate(ctx context.Context, db ycsb.DB, state *coreS
 		state.keyIdx += 1
 		keyName = strconv.Itoa(state.keyIdx % state.keyCount)
 		if _, ok := state.keySet[keyName]; !ok {
-			state.keySet[keyName] = 1
+			state.keySet[keyName] = state.valSize
 			return db.Insert(ctx, c.table, keyName, c.buildValues(state, keyName))
 		}
 	} else {
