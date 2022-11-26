@@ -60,7 +60,7 @@ func (m *measurement) output() {
 	sort.Strings(keys)
 
 	for _, op := range keys {
-		fmt.Printf("%-6s - %s\n", op, m.opMeasurement[op].Summary())
+		fmt.Printf("shupande%-6s - %s\n", op, m.opMeasurement[op].Summary())
 	}
 }
 
