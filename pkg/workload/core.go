@@ -42,8 +42,11 @@ type coreState struct {
 	fieldNames []string
 
 	//used for incremental updates option
-	valSize     int  // increases by 8 everytime - can we use a custom generator for this ?
-	valInserted bool // to check if the first seed value has been inserted
+	valSize      int            // starting size of value
+	valIncrement int            // increments in bytes for the value
+	keyIdx       int            //which key to modify
+	keyCount     int            //number of keys to impact
+	keySet       map[string]int //set of keys inserted so far
 }
 
 type operationType int64
@@ -81,6 +84,9 @@ type core struct {
 	zeroPadding                  int64
 	insertionRetryLimit          int64
 	insertionRetryInterval       int64
+	startValLength               int64
+	valIncrement                 int64
+	hotKeysCount                 int64
 
 	valuePool sync.Pool
 }
@@ -175,15 +181,20 @@ func (c *core) Load(ctx context.Context, db ycsb.DB, totalCount int64) error {
 }
 
 // InitThread implements the Workload InitThread interface.
-func (c *core) InitThread(ctx context.Context, _ int, _ int) context.Context {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+func (c *core) InitThread(ctx context.Context, threadId int, threadCount int) context.Context {
+	//r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r := rand.New(rand.NewSource(int64(threadId*threadCount) * 1000000007))
 	fieldNames := make([]string, len(c.fieldNames))
 	copy(fieldNames, c.fieldNames)
 	state := &coreState{
-		r:           r,
-		fieldNames:  fieldNames,
-		valSize:     8,
-		valInserted: false,
+		//currently hardcoding this, need to find a way to do this from params
+		r:            r,
+		fieldNames:   fieldNames,
+		valSize:      c.startValLength,
+		valIncrement: c.valIncrement,
+		keyIdx:       0,
+		keyCount:     c.hotKeysCount,
+		keySet:       make(map[string]int),
 	}
 	return context.WithValue(ctx, stateKey, state)
 }
@@ -219,7 +230,7 @@ func (c *core) buildSingleValue(state *coreState, key string) map[string][]byte 
 	} else {
 		if c.incrementalUpdate {
 			buf = c.buildValueWithSize(state, state.valSize)
-			state.valSize += 8
+			state.valSize += state.valIncrement
 		} else {
 			buf = c.buildRandomValue(state)
 		}
@@ -420,11 +431,6 @@ func (c *core) DoTransaction(ctx context.Context, db ycsb.DB) error {
 	case read:
 		return c.doTransactionRead(ctx, db, state)
 	case update:
-		//if incrementalUpdate is enabled, we first INSERT the seed key and then perform incremental updates on it
-		if c.incrementalUpdate && !state.valInserted {
-			db.Insert(ctx, c.table, "fixedKey", c.buildValues(state, "fixedKey"))
-			state.valInserted = true
-		}
 		return c.doTransactionUpdate(ctx, db, state)
 	case insert:
 		return c.doTransactionInsert(ctx, db, state)
@@ -578,7 +584,12 @@ func (c *core) doTransactionUpdate(ctx context.Context, db ycsb.DB, state *coreS
 	keyNum := c.nextKeyNum(state)
 	var keyName string
 	if c.incrementalUpdate {
-		keyName = "fixedKey"
+		state.keyIdx += 1
+		keyName = strconv.Itoa(state.keyIdx % state.keyCount)
+		if _, ok := state.keySet[keyName]; !ok {
+			state.keySet[keyName] = 1
+			return db.Insert(ctx, c.table, keyName, c.buildValues(state, keyName))
+		}
 	} else {
 		keyName = c.buildKeyName(keyNum)
 	}
@@ -702,7 +713,12 @@ func (coreCreator) Create(p *properties.Properties) (ycsb.Workload, error) {
 	c.readAllFields = p.GetBool(prop.ReadAllFields, prop.ReadALlFieldsDefault)
 	c.writeAllFields = p.GetBool(prop.WriteAllFields, prop.WriteAllFieldsDefault)
 	c.dataIntegrity = p.GetBool(prop.DataIntegrity, prop.DataIntegrityDefault)
+
+	//settings related to incremental update
 	c.incrementalUpdate = p.GetBool(prop.IncrementalUpdate, prop.IncrementalUpdateDefault)
+	c.startValLength = p.GetInt64(prop.startValLength, prop.startValLengthDefault)
+	c.valIncrement = p.GetInt64(prop.valIncrement, prop.valIncrementDefault)
+	c.hotKeysCount = p.GetInt64(prop.hotKeysCount, prop.hotKeysCountDefault)
 
 	fieldLengthDistribution := p.GetString(prop.FieldLengthDistribution, prop.FieldLengthDistributionDefault)
 	if c.dataIntegrity && fieldLengthDistribution != "constant" {

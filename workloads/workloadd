@@ -33,10 +33,10 @@ fieldlength=1024
 
 readallfields=true
 
-readproportion=0.95
+readproportion=0.5
 updateproportion=0
 scanproportion=0
-insertproportion=0.05
+insertproportion=0.5
 
 requestdistribution=zipfian
 fieldlengthdistribution=zipfian
