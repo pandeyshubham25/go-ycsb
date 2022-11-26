@@ -28,6 +28,7 @@ import (
 	"github.com/pingcap/go-ycsb/pkg/generator"
 	"github.com/pingcap/go-ycsb/pkg/measurement"
 	"github.com/pingcap/go-ycsb/pkg/prop"
+
 	"github.com/pingcap/go-ycsb/pkg/util"
 	"github.com/pingcap/go-ycsb/pkg/ycsb"
 )
@@ -190,10 +191,10 @@ func (c *core) InitThread(ctx context.Context, threadId int, threadCount int) co
 		//currently hardcoding this, need to find a way to do this from params
 		r:            r,
 		fieldNames:   fieldNames,
-		valSize:      c.startValLength,
-		valIncrement: c.valIncrement,
+		valSize:      int(c.startValLength),
+		valIncrement: int(c.valIncrement),
 		keyIdx:       0,
-		keyCount:     c.hotKeysCount,
+		keyCount:     int(c.hotKeysCount),
 		keySet:       make(map[string]int),
 	}
 	return context.WithValue(ctx, stateKey, state)
@@ -716,9 +717,9 @@ func (coreCreator) Create(p *properties.Properties) (ycsb.Workload, error) {
 
 	//settings related to incremental update
 	c.incrementalUpdate = p.GetBool(prop.IncrementalUpdate, prop.IncrementalUpdateDefault)
-	c.startValLength = p.GetInt64(prop.startValLength, prop.startValLengthDefault)
-	c.valIncrement = p.GetInt64(prop.valIncrement, prop.valIncrementDefault)
-	c.hotKeysCount = p.GetInt64(prop.hotKeysCount, prop.hotKeysCountDefault)
+	c.startValLength = p.GetInt64(prop.StartValLength, prop.StartValLengthDefault)
+	c.valIncrement = p.GetInt64(prop.ValIncrement, prop.ValIncrementDefault)
+	c.hotKeysCount = p.GetInt64(prop.HotKeysCount, prop.HotKeysCountDefault)
 
 	fieldLengthDistribution := p.GetString(prop.FieldLengthDistribution, prop.FieldLengthDistributionDefault)
 	if c.dataIntegrity && fieldLengthDistribution != "constant" {
