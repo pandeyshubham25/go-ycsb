@@ -26,7 +26,7 @@ import (
 	"github.com/pingcap/go-ycsb/pkg/ycsb"
 )
 
-//  properties
+// properties
 const (
 	badgerDir                     = "badger.dir"
 	badgerValueDir                = "badger.valuedir"
@@ -93,7 +93,7 @@ func (c badgerCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 
 func getOptions(p *properties.Properties) badger.Options {
 
-	path := p.GetString(badgerDir, "/home/shubham/bench-data/badger")
+	path := p.GetString(badgerDir, "/tmp/badger")
 	opts := badger.DefaultOptions(path)
 
 	opts.ValueDir = p.GetString(badgerValueDir, path)
