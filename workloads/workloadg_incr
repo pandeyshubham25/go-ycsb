@@ -35,8 +35,8 @@ scanproportion=0
 insertproportion=0
 readmodifywriteproportion=0.0
 incrementalupdate=true
-startvallength=4000
-valincrement=0
+startvallength=8
+valincrement=8
 hotkeyscount=512
 
 requestdistribution=zipfian
